@@ -542,18 +542,20 @@ if (still) {
   vids.forEach(v => { load(v); v.autoplay = true; });
 }
 
-/* Map view: one frame, layers stacked; swap area and map, fade the map, toggle layers */
+/* Map view: one frame, layers stacked; swap area, fade the map, toggle layers.
+   Image paths stay literal: deploy_pages.sh copies only the media/... paths it can grep. */
 const MV = {
-  stand: { w: 1850, h: 1450, scale: ["10.81%", "20 m"], alt: "Top-down view of the splat: the forest stand between the road and the university building" },
-  tietotalo: { w: 2000, h: 1029, scale: ["10%", "14 m"], alt: "Close-up of the Tietotalo wings at the forest edge: splat walls in yellow and LiDAR walls in cyan on the purple NLS footprint" }
+  stand: { w: 1850, h: 1450, scale: ["10.81%", "20 m"], alt: "Top-down view of the splat: the forest stand between the road and the university building",
+    img: { ".l-splat": "media/img/stand_splat.jpg", ".l-map": "media/img/stand_pk.jpg", ".l-lidar": "media/img/stand_lidar.webp", ".l-walls": "media/img/stand_walls.webp" } },
+  tietotalo: { w: 2000, h: 1029, scale: ["10%", "14 m"], alt: "Close-up of the Tietotalo wings at the forest edge: splat walls in yellow and LiDAR walls in cyan on the purple NLS footprint",
+    img: { ".l-splat": "media/img/tietotalo_splat.jpg", ".l-map": "media/img/tietotalo_pk.jpg", ".l-lidar": "media/img/tietotalo_lidar.webp", ".l-walls": "media/img/tietotalo_walls.webp" } }
 };
-const mv = { view: "stand", map: "pk" };
+const mv = { view: "stand" };
 const frame = document.getElementById("mv-frame");
 function mvRender() {
   const v = MV[mv.view];
   frame.style.aspectRatio = v.w + " / " + v.h;
-  const set = (cls, file) => { const im = frame.querySelector(cls); im.src = "media/img/" + mv.view + "_" + file; im.width = v.w; im.height = v.h; };
-  set(".l-splat", "splat.jpg"); set(".l-map", mv.map + ".jpg"); set(".l-lidar", "lidar.webp"); set(".l-walls", "walls.webp");
+  for (const [cls, src] of Object.entries(v.img)) { const im = frame.querySelector(cls); im.src = src; im.width = v.w; im.height = v.h; }
   frame.querySelector(".l-splat").alt = v.alt;
   const sc = document.getElementById("mv-scale"); sc.style.width = v.scale[0]; sc.lastChild.textContent = v.scale[1];
   document.querySelectorAll("#mapview [data-view]").forEach(b => b.setAttribute("aria-pressed", b.dataset.view === mv.view));
