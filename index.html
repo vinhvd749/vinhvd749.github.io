@@ -134,14 +134,12 @@ section.demo { border-top: 1px solid var(--rule); padding-block: 3.6rem 0.5rem; 
 .ar-16x9 { aspect-ratio: 16 / 9; } .ar-sq { aspect-ratio: 1 / 1; } .ar-layer { aspect-ratio: 640 / 678; }
 .ar-rock { aspect-ratio: 720 / 672; }
 .ar-stack { aspect-ratio: 1 / 2; } .ar-side { aspect-ratio: 2 / 1; }
-/* comparison: on desktop the side-by-side clip (ours | Teleport) spans the width, the numbers and the Teleport-app clip
-   in two columns below; at ≤920 px the stacked clip (ours over Teleport) instead, one column. The hidden clip never
-   loads: the lazy loader only fetches clips that come on screen. */
-.cmp { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 1.8rem 2.6rem; align-items: start; }
-.cmp-wide { grid-column: 1 / -1; }
+/* comparison: the side-by-side clip (ours | Teleport) on desktop, the stacked one (ours over Teleport) at ≤920 px, with
+   its numbers right under it. The hidden clip never loads: the lazy loader only fetches clips that come on screen.
+   The Teleport-app capture is its own block below (a different recording, no score), clip beside its caption. */
 .cmp-video { display: none; }
-.cmp-side { display: grid; gap: 1.3rem; align-content: start; min-width: 0; }
-.cmp-side .facts.stack { margin-top: 0; }
+.facts.cmp-facts dd { font-size: 1.6rem; }
+.cmp-app { display: grid; grid-template-columns: minmax(0, 420px) minmax(0, 1fr); gap: 1.2rem 2rem; align-items: start; }
 .note { font-size: 0.92rem; line-height: 1.5; color: var(--ink-2); max-width: var(--measure); } .ar-lawn { aspect-ratio: 1280 / 668; } .ar-hv24 { aspect-ratio: 1892 / 1080; }
 
 /* ---------- map view: splat and NLS maps stacked in ONE frame ---------- */
@@ -194,9 +192,12 @@ button.copy:hover { border-color: var(--accent); }
 @media (max-width: 920px) {
   .hero { padding-block: 2.2rem 1.6rem; }
   .hero-text { grid-template-columns: minmax(0, 1fr); }
-  .cmp { grid-template-columns: minmax(0, 1fr); }
   .cmp-wide { display: none; }
   .cmp-video { display: grid; max-width: 560px; }
+  .facts.cmp-facts { flex-direction: column; }
+  .facts.cmp-facts div { border-right: 0; border-bottom: 1px solid var(--rule); margin-right: 0; padding: 0.6rem 0; }
+  .facts.cmp-facts div:last-child { border-bottom: 0; }
+  .cmp-app { grid-template-columns: minmax(0, 1fr); }
   .map-pair { grid-template-columns: minmax(0, 1fr); }
 }
 @media (max-width: 680px) {
@@ -356,30 +357,34 @@ button.copy:hover { border-color: var(--accent); }
 
     <div class="sub">
       <h3>Against Varjo Teleport, same recording</h3>
-      <div class="cmp">
-        <figure class="clip cmp-wide">
-          <div class="frame ar-side"><video data-src="media/loops/rock_compare_side.mp4" poster="media/img/rock_compare_side.jpg" muted loop playsinline preload="none" aria-label="The same camera path in both splats: ours on the left, Varjo Teleport on the right"></video></div>
-          <figcaption><p>Left: ours. Right: Varjo Teleport. Same camera path.</p></figcaption>
-        </figure>
-        <figure class="clip cmp-video">
-          <div class="frame ar-stack"><video data-src="media/loops/rock_compare_stack.mp4" poster="media/img/rock_compare_stack.jpg" muted loop playsinline preload="none" aria-label="The same camera path in both splats: ours on top, Varjo Teleport below"></video></div>
-          <figcaption><p>Top: ours. Bottom: Varjo Teleport. Same camera path.</p></figcaption>
-        </figure>
-        <div class="cmp-side">
-          <div class="prose">
-            <p>We gave Varjo Teleport the same 360° video, all 264 seconds of it. Both splats fly the same camera path.</p>
-          </div>
-          <dl class="facts stack">
-            <div><dt>Ours</dt><dd>20.44 dB <small>SSIM 0.707 · LPIPS 0.290</small></dd></div>
-            <div><dt>Varjo Teleport</dt><dd>15.88 dB <small>SSIM 0.460 · LPIPS 0.519</small></dd></div>
-            <div><dt>Gaussians</dt><dd>10 M <small>vs 2.3 M in Teleport's export</small></dd></div>
-          </dl>
-          <p class="note">PSNR on the same 363 held-out photos, people excluded. Teleport trained on every frame of the video, the held-out ones included.</p>
-        </div>
+      <div class="prose">
+        <p>We gave Varjo Teleport the same 360° video, all 264 seconds of it. Both splats fly the same camera path.</p>
+      </div>
+      <figure class="clip cmp-wide">
+        <div class="frame ar-side"><video data-src="media/loops/rock_compare_side.mp4" poster="media/img/rock_compare_side.jpg" muted loop playsinline preload="none" aria-label="The same camera path in both splats: ours on the left, Varjo Teleport on the right"></video></div>
+        <figcaption><p>Left: ours. Right: Varjo Teleport. Same camera path.</p></figcaption>
+      </figure>
+      <figure class="clip cmp-video">
+        <div class="frame ar-stack"><video data-src="media/loops/rock_compare_stack.mp4" poster="media/img/rock_compare_stack.jpg" muted loop playsinline preload="none" aria-label="The same camera path in both splats: ours on top, Varjo Teleport below"></video></div>
+        <figcaption><p>Top: ours. Bottom: Varjo Teleport. Same camera path.</p></figcaption>
+      </figure>
+      <dl class="facts cmp-facts">
+        <div><dt>Ours</dt><dd>20.44 dB <small>SSIM 0.707 · LPIPS 0.290</small></dd></div>
+        <div><dt>Varjo Teleport</dt><dd>15.88 dB <small>SSIM 0.460 · LPIPS 0.519</small></dd></div>
+        <div><dt>Gaussians</dt><dd>10 M <small>vs 2.3 M in Teleport's export</small></dd></div>
+      </dl>
+      <p class="note">PSNR on the same 363 held-out photos, people excluded. Teleport trained on every frame of the video, the held-out ones included.</p>
+    </div>
+
+    <div class="sub">
+      <h3>Teleport with its own app</h3>
+      <div class="cmp-app">
         <figure class="clip">
           <div class="frame ar-rock"><video data-src="media/loops/rock_varjo.mp4" poster="media/img/rock_varjo.jpg" muted loop playsinline preload="none" aria-label="Varjo Teleport capture of the same site made with its iPhone app"></video></div>
-          <figcaption><h3>Teleport with its own app</h3><p>An earlier capture of the same site made with the Teleport app on an iPhone 15 Pro, shown in Teleport's own viewer. It is a different recording, so it has no score on our held-out photos.</p></figcaption>
         </figure>
+        <div class="prose">
+          <p>An earlier capture of the same site made with the Teleport app on an iPhone 15 Pro, shown in Teleport's own viewer. It is a different recording, so it has no score on our held-out photos.</p>
+        </div>
       </div>
     </div>
   </section>
