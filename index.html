@@ -1,0 +1,561 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌲</text></svg>">
+<title>Forest Reconstruction Demos</title>
+<meta name="description" content="Research demos: photorealistic, georeferenced Gaussian-splat reconstruction of real forests from a consumer 360° camera, streaming splats, and drone simulation inside the reconstructed forest.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Schibsted+Grotesk:wght@500;600;700;800&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
+<style>
+/* Layout: a survey notebook laid over a map. One reading column (~66ch) for the text; media breaks out to 1180px.
+   Every section opens with the site tag a map sheet would carry: where the data comes from, in its real units. */
+:root {
+  --paper:   #F3F5F1;   /* cool pale ground, a touch of green */
+  --panel:   #E7ECE5;
+  --ink:     #16201A;   /* spruce-dark text */
+  --ink-2:   #4A5850;
+  --rule:    #CCD5CC;
+  --accent:  #4E008E;   /* Tampere University purple */
+  --contour: #A35E2C;   /* topographic-map contour brown */
+  --screen:  #0D1310;   /* behind every video */
+  --chip-fg: #FFFFFF;
+
+  --f-display: "Schibsted Grotesk", "Helvetica Neue", Arial, sans-serif;
+  --f-body:    "Source Serif 4", Georgia, "Times New Roman", serif;
+  --f-mono:    "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  --wide: 1180px;
+  --measure: 66ch;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0D1210; --panel: #151C18; --ink: #E2E8E3; --ink-2: #9CA9A1; --rule: #28322C;
+    --accent: #BFA2FF; --contour: #D8975F; --screen: #060908; --chip-fg: #160C26;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0D1210; --panel: #151C18; --ink: #E2E8E3; --ink-2: #9CA9A1; --rule: #28322C;
+  --accent: #BFA2FF; --contour: #D8975F; --screen: #060908; --chip-fg: #160C26;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--paper); color: var(--ink);
+  font-family: var(--f-body); font-size: 1.0625rem; line-height: 1.62;
+  -webkit-font-smoothing: antialiased;
+}
+.page { max-width: var(--wide); margin: 0 auto; padding-inline: max(16px, 3.2vw); padding-block: 0 4rem; }
+a { color: var(--accent); text-underline-offset: 0.18em; text-decoration-thickness: 1px; }
+a:hover { text-decoration-thickness: 2px; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+h1, h2, h3 { font-family: var(--f-display); text-wrap: balance; margin: 0; color: var(--ink); }
+p { margin: 0; }
+.prose { max-width: var(--measure); display: grid; gap: 0.9em; }
+.prose p { text-wrap: pretty; }
+.mono { font-family: var(--f-mono); }
+
+/* ---------- top bar ---------- */
+.bar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding-block: 1.25rem; border-bottom: 1px solid var(--rule); }
+.tau { height: 34px; width: auto; color: var(--accent); display: block; }
+.bar nav { display: flex; flex-wrap: wrap; gap: 0.25rem 1.1rem; font-family: var(--f-display); font-weight: 600; font-size: 0.9rem; }
+.bar nav a { color: var(--ink-2); text-decoration: none; }
+.bar nav a:hover { color: var(--accent); }
+
+/* ---------- hero ---------- */
+.hero { display: grid; gap: 2.2rem; padding-block: 3rem 1rem; }
+.hero-text { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 1.4rem 3rem; align-items: end; }
+.hero-reel { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.2rem; }
+.reel-cap { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.2rem 0.9rem; font-family: var(--f-mono); font-size: 0.78rem; letter-spacing: 0.02em; color: var(--ink-2); }
+.reel-cap a { font-family: var(--f-display); font-weight: 600; font-size: 0.92rem; letter-spacing: 0; text-decoration: none; }
+.reel-cap a:hover { text-decoration: underline; }
+.eyebrow { font-family: var(--f-mono); font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--contour); margin-bottom: 1.1rem; }
+.hero h1 { font-size: clamp(2.2rem, 5.2vw, 4.1rem); line-height: 1.02; font-weight: 800; letter-spacing: -0.025em; }
+.hero h1 em { font-style: normal; color: var(--accent); }
+.lede { font-size: 1.2rem; line-height: 1.55; color: var(--ink-2); max-width: 58ch; }
+.authors { margin-top: 1.5rem; display: grid; gap: 0.15rem; font-family: var(--f-display); }
+.authors .names { font-weight: 600; font-size: 1.05rem; }
+.authors .aff { color: var(--ink-2); font-size: 0.95rem; }
+.contour-card { display: grid; gap: 0.5rem; }
+.contours { width: 100%; height: auto; display: block; }
+.contours path { fill: none; stroke: var(--contour); stroke-linejoin: round; stroke-linecap: round; }
+.contours .c-minor { stroke-width: 1.1; opacity: 0.42; }
+.contours .c-major { stroke-width: 2.1; opacity: 0.85; }
+.contour-card figcaption { font-family: var(--f-mono); font-size: 0.72rem; color: var(--ink-2); letter-spacing: 0.02em; }
+
+/* ---------- video frames ---------- */
+.frame { position: relative; background: var(--screen); border-radius: 3px; overflow: hidden; max-width: 100%; }
+.frame video, .frame img, .frame iframe { display: block; width: 100%; height: 100%; object-fit: cover; border: 0; }
+.tag { position: absolute; left: 0.6rem; bottom: 0.6rem; font-family: var(--f-mono); font-size: 0.72rem; line-height: 1.3; color: #E9EFEA; background: rgb(8 12 10 / 0.72); padding: 0.28rem 0.5rem; border-radius: 2px; pointer-events: none; }
+.chip { position: absolute; left: 0.6rem; top: 0.6rem; font-family: var(--f-display); font-weight: 700; font-size: 0.85rem; padding: 0.2rem 0.55rem; border-radius: 2px; background: var(--accent); color: var(--chip-fg); pointer-events: none; }
+.chip.plain { background: rgb(240 244 241 / 0.92); color: #16201A; }
+.speed { position: absolute; right: 0.6rem; top: 0.6rem; font-family: var(--f-mono); font-size: 0.72rem; color: #E9EFEA; background: rgb(8 12 10 / 0.72); padding: 0.2rem 0.45rem; border-radius: 2px; pointer-events: none; }
+.hero-video { margin: 0; gap: 0.55rem; }
+.hero-video .frame { aspect-ratio: 1 / 1; }
+
+figure { margin: 0; min-width: 0; }
+.clip { display: grid; gap: 0.7rem; align-content: start; }
+.clip figcaption { display: grid; gap: 0.25rem; }
+.spd { font-family: var(--f-mono); font-size: 0.75rem; font-weight: 500; color: var(--ink-2); margin-left: 0.35rem; }
+.clip figcaption h3 { font-size: 1.08rem; font-weight: 700; letter-spacing: -0.005em; }
+.clip figcaption p { font-size: 0.97rem; line-height: 1.55; color: var(--ink-2); max-width: var(--measure); }
+.yt { font-family: var(--f-display); font-weight: 600; font-size: 0.9rem; justify-self: start; margin-top: 0.15rem; }
+
+/* ---------- sections ---------- */
+section.demo { border-top: 1px solid var(--rule); padding-block: 3.6rem 0.5rem; margin-top: 3rem; display: grid; gap: 2.2rem; scroll-margin-top: 1rem; }
+.sec-head { display: grid; gap: 0.8rem; }
+.site { font-family: var(--f-mono); font-size: 0.78rem; color: var(--contour); display: flex; flex-wrap: wrap; gap: 0.2rem 0.9rem; align-items: center; }
+.site::before { content: ""; width: 0.7rem; height: 0.7rem; border: 1.5px solid currentColor; border-radius: 50%; box-shadow: inset 0 0 0 2.5px var(--paper), inset 0 0 0 5px currentColor; flex: none; }
+.sec-head h2 { font-size: clamp(1.75rem, 3.3vw, 2.55rem); line-height: 1.08; font-weight: 800; letter-spacing: -0.02em; max-width: 24ch; }
+.sub { display: grid; gap: 1.1rem; }
+.sub > h3 { font-size: 1.3rem; font-weight: 700; letter-spacing: -0.01em; }
+
+/* facts: the numbers a reviewer will ask for, set as a ruled row */
+.facts { display: flex; flex-wrap: wrap; margin: 0; border-block: 1px solid var(--rule); }
+.facts div { padding: 0.75rem 1.4rem 0.8rem 0; margin-right: 1.4rem; border-right: 1px solid var(--rule); min-width: 0; }
+.facts div:last-child { border-right: 0; margin-right: 0; }
+.facts dt { font-family: var(--f-mono); font-size: 0.7rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-2); }
+.facts dd { margin: 0.1rem 0 0; font-family: var(--f-display); font-weight: 700; font-size: 1.3rem; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+.facts dd small { font-size: 0.8rem; font-weight: 500; color: var(--ink-2); }
+
+.grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.6rem; }
+.grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.3rem; }
+.grid-sim { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.778fr); gap: 1.6rem; }
+.feature { grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); gap: 1.4rem 2rem; align-items: center; }
+.feature figcaption h3 { font-size: clamp(1.35rem, 2.4vw, 1.8rem); font-weight: 800; letter-spacing: -0.015em; line-height: 1.15; }
+.feature figcaption p { font-size: 1.05rem; }
+.facts.stack { flex-direction: column; margin-top: 0.8rem; }
+.facts.stack div { border-right: 0; border-bottom: 1px solid var(--rule); margin-right: 0; padding: 0.6rem 0; }
+.facts.stack div:last-child { border-bottom: 0; }
+.facts.stack dd { font-size: 1.6rem; }
+.ar-16x9 { aspect-ratio: 16 / 9; } .ar-sq { aspect-ratio: 1 / 1; } .ar-layer { aspect-ratio: 640 / 678; }
+.ar-rock { aspect-ratio: 720 / 672; }
+.ar-stack { aspect-ratio: 1 / 2; }
+/* comparison: the stacked clip (ours over Teleport) in a narrow column, the numbers beside it; one column on phones */
+.cmp { display: grid; grid-template-columns: minmax(0, 500px) minmax(0, 1fr); gap: 1.8rem 2.6rem; align-items: start; }
+.cmp-side { display: grid; gap: 1.3rem; align-content: start; min-width: 0; }
+.cmp-side .facts.stack { margin-top: 0; }
+.note { font-size: 0.92rem; line-height: 1.5; color: var(--ink-2); max-width: var(--measure); } .ar-lawn { aspect-ratio: 1280 / 668; } .ar-hv24 { aspect-ratio: 1892 / 1080; }
+
+/* ---------- map view: splat and NLS maps stacked in ONE frame ---------- */
+.mapview { display: grid; gap: 0.75rem; }
+.mv-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem 1.1rem; font-family: var(--f-display); font-size: 0.86rem; }
+.seg { display: inline-flex; border: 1px solid var(--rule); border-radius: 3px; overflow: hidden; }
+.seg button { font: inherit; font-weight: 600; padding: 0.32rem 0.7rem; border: 0; background: var(--paper); color: var(--ink-2); cursor: pointer; }
+.seg button + button { border-left: 1px solid var(--rule); }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--chip-fg); }
+.mv-range { display: inline-flex; align-items: center; gap: 0.45rem; color: var(--ink-2); font-weight: 600; }
+.mv-range input { width: 7.5rem; accent-color: var(--accent); }
+.chk { display: inline-flex; align-items: center; gap: 0.3rem; color: var(--ink-2); font-weight: 600; cursor: pointer; }
+.chk input { accent-color: var(--accent); }
+.mv-frame { position: relative; background: #FFFFFF; border: 1px solid var(--rule); border-radius: 3px; overflow: hidden; max-width: 100%; isolation: isolate; }
+.mv-frame img { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.mv-frame .l-map { mix-blend-mode: multiply; opacity: var(--map, 0.75); }
+.mv-frame img[hidden] { display: none; }
+.mv-legend { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0.35rem 1.4rem; font-size: 0.9rem; color: var(--ink-2); }
+.mv-legend li { display: inline-flex; align-items: center; gap: 0.45rem; }
+.mv-legend i { width: 1.4rem; height: 0; border-top: 3px solid; flex: none; }
+.mv-legend .k-yellow { border-color: #FFD600; border-top-width: 5px; outline: 1px solid #1A1A1A; }
+.mv-legend .k-cyan { border-color: #00BEEB; border-top-width: 5px; outline: 1px solid #1A1A1A; }
+.mv-legend .k-purple { width: 1.1rem; height: 0.8rem; border: 1.5px solid #111; background: #FF33FF; }
+.scale { position: absolute; right: 0.7rem; bottom: 0.7rem; display: grid; gap: 2px; justify-items: stretch; box-sizing: content-box; white-space: nowrap; font-family: var(--f-mono); font-size: 0.7rem; color: #16201A; background: rgb(255 255 255 / 0.85); padding: 0.3rem 0.45rem; border-radius: 2px; pointer-events: none; z-index: 2; }
+.scale i { display: block; width: 100%; height: 5px; border: 1.5px solid #16201A; border-top: 0; }
+.map-pair { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); gap: 1.6rem; align-items: start; }
+
+/* ---------- footer ---------- */
+/* ---------- profile links + CV ---------- */
+.links { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1.2rem; font-family: var(--f-display); font-weight: 600; font-size: 0.9rem; }
+.links a { text-decoration: none; color: var(--ink); border: 1px solid var(--rule); border-radius: 3px; padding: 0.32rem 0.75rem; background: var(--paper); }
+.links a:hover { border-color: var(--accent); color: var(--accent); }
+.links.stack { flex-direction: column; align-items: flex-start; margin-top: 0.4rem; }
+.cv-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 0.9fr); gap: 1.4rem; align-items: start; }
+.cv-page { display: block; border: 1px solid var(--rule); border-radius: 3px; overflow: hidden; background: #FFFFFF; }
+.cv-page img { display: block; width: 100%; height: auto; }
+.cv-page:hover { border-color: var(--accent); }
+.cv-side { display: grid; gap: 0.6rem; font-size: 0.97rem; color: var(--ink-2); }
+.foot-links { margin-top: 0.7rem; }
+@media (max-width: 920px) { .cv-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .cv-side { grid-column: 1 / -1; } }
+footer { margin-top: 4.5rem; padding-top: 2rem; border-top: 1px solid var(--rule); display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 2rem; font-size: 0.95rem; color: var(--ink-2); }
+footer h2 { font-size: 1rem; font-weight: 700; margin-bottom: 0.5rem; }
+.copyrow { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; }
+.copyrow code { font-family: var(--f-mono); font-size: 0.92rem; color: var(--ink); user-select: all; }
+button.copy { font-family: var(--f-display); font-weight: 600; font-size: 0.82rem; padding: 0.3rem 0.7rem; border-radius: 2px; border: 1px solid var(--rule); background: var(--panel); color: var(--ink); cursor: pointer; }
+button.copy:hover { border-color: var(--accent); }
+.updated { font-family: var(--f-mono); font-size: 0.75rem; margin-top: 0.9rem; }
+
+/* ---------- responsive ---------- */
+@media (max-width: 920px) {
+  .hero { padding-block: 2.2rem 1.6rem; }
+  .hero-text { grid-template-columns: minmax(0, 1fr); }
+  .cmp { grid-template-columns: minmax(0, 1fr); }
+  .cmp-video { max-width: 560px; }
+  .map-pair { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 680px) {
+  .grid-2, .grid-3, .grid-sim, .feature, .hero-reel, footer { grid-template-columns: minmax(0, 1fr); }
+  .grid-3 { gap: 1.8rem; }
+  .bar nav { display: none; }
+  .facts div { padding-right: 1rem; margin-right: 1rem; }
+  .facts dd { font-size: 1.12rem; }
+  section.demo { padding-block: 2.6rem 0.5rem; margin-top: 2rem; }
+}
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+</style>
+
+<div class="page">
+  <header class="bar">
+    <a href="https://www.tuni.fi/en" aria-label="Tampere University"><svg class="tau" viewBox="0 0 266.32 84.8" role="img" aria-label="Tampere University"> <g> <rect y="0" fill="none" width="266.32" height="84.8"/> <g> <rect x="20.24" y="40.64" fill="currentColor" fill-rule="evenodd" clip-rule="evenodd" width="9.2" height="3.68"/> <polygon fill="currentColor" fill-rule="evenodd" clip-rule="evenodd" points="36.8,44.32 46,44.32 46,40.64 33.12,40.64 33.12,57.2 36.8,57.2 "/> <path fill="currentColor" fill-rule="evenodd" clip-rule="evenodd" d="M29.44,18.98v-3.75c-9.42,1.73-16.56,9.98-16.56,19.9v9.2h3.68v-9.2C16.56,27.25,22.07,20.65,29.44,18.98"/> <path fill="currentColor" fill-rule="evenodd" clip-rule="evenodd" d="M49.68,40.64v11.04c0,9.14-7.41,16.56-16.56,16.56v3.68c11.18,0,20.24-9.06,20.24-20.24V40.64H49.68z"/> <path fill="currentColor" fill-rule="evenodd" clip-rule="evenodd" d="M135.96,45.34v2.35c-0.33-0.07-0.63-0.09-0.93-0.09c-2.12,0-3.28,1.35-3.28,3.81v5.79h-2.65V45.39h2.47v1.74 h0.05c0.79-1.28,1.91-1.91,3.37-1.91C135.28,45.23,135.65,45.27,135.96,45.34"/> <path fill="currentColor" fill-rule="evenodd" clip-rule="evenodd" d="M138.83,50.09L138.83,50.09h5.98c-0.19-2.07-1.4-3.09-2.98-3.09C140.22,46.99,139.06,48.04,138.83,50.09 M144.59,53.64h2.72c-0.44,2.12-2.35,3.91-5.44,3.91c-3.6,0-5.72-2.58-5.72-6.39c0-3.49,2.09-6.12,5.67-6.12 c2.7,0,4.65,1.56,5.3,4.02c0.23,0.74,0.33,1.63,0.33,2.77h-8.67c0.09,2.67,1.44,3.77,3.09,3.77 C143.39,55.6,144.36,54.78,144.59,53.64z"/> <polygon fill="currentColor" fill-rule="evenodd" clip-rule="evenodd" points="69.01,43.06 69.01,57.2 66.24,57.2 66.24,43.06 60.8,43.06 60.8,40.65 74.45,40.65 74.45,43.06 "/> <path fill="currentColor" fill-rule="evenodd" clip-rule="evenodd" d="M80.1,51.6L80.1,51.6c-0.79,0.05-1.93,0.16-2.72,0.3c-1.7,0.28-2.33,0.79-2.33,1.86 c0,1.05,0.74,1.74,2.09,1.74c0.81,0,1.6-0.26,2.14-0.79c0.63-0.65,0.81-1.28,0.81-2.53V51.6z M82.66,49.67v4.42 c0,1.4,0.12,2.37,0.3,3.12h-2.4c-0.12-0.51-0.16-1.09-0.16-1.65h-0.05c-0.86,1.26-2.19,1.91-3.98,1.91c-2.47,0-4-1.49-4-3.51 c0-1.93,1.14-3.19,4.53-3.72c0.95-0.16,2.35-0.3,3.19-0.35v-0.46c0-1.74-0.95-2.44-2.3-2.44c-1.46,0-2.26,0.81-2.33,2.07h-2.6 c0.12-2.23,1.74-4,4.93-4C80.92,45.04,82.66,46.58,82.66,49.67z"/> <path fill="currentColor" fill-rule="evenodd" clip-rule="evenodd" d="M102.01,49.92v7.28h-2.65v-7.02c0-2.09-0.81-2.93-2.14-2.93c-1.56,0-2.49,1.33-2.49,3.58v6.37h-2.65v-7.3 c0-1.67-0.74-2.65-2.12-2.65c-1.58,0-2.49,1.35-2.49,3.63v6.33h-2.65V45.39h2.53v1.42h0.05c0.84-1.14,1.88-1.7,3.28-1.7 c1.63,0,2.88,0.74,3.49,2.14c0.86-1.35,2-2.14,3.79-2.14C100.48,45.11,102.01,46.74,102.01,49.92"/> <path fill="currentColor" fill-rule="evenodd" clip-rule="evenodd" d="M106.73,51.3L106.73,51.3c0,2.56,1.14,4.14,2.86,4.14c1.79,0,2.93-1.63,2.93-4.14s-1.14-4.14-2.93-4.14 C107.87,47.16,106.73,48.71,106.73,51.3 M115.28,51.3c0,3.77-1.91,6.19-4.91,6.19c-1.47,0-2.79-0.67-3.47-1.81h-0.05v5.84h-2.65 V45.39h2.58v1.63h0.05c0.7-1.21,2.02-1.93,3.51-1.93C113.36,45.09,115.28,47.53,115.28,51.3z"/> <path fill="currentColor" fill-rule="evenodd" clip-rule="evenodd" d="M118.91,50.09L118.91,50.09h5.98c-0.19-2.07-1.39-3.09-2.98-3.09C120.31,46.99,119.14,48.04,118.91,50.09 M124.68,53.64h2.72c-0.44,2.12-2.35,3.91-5.44,3.91c-3.6,0-5.72-2.58-5.72-6.39c0-3.49,2.09-6.12,5.67-6.12 c2.7,0,4.65,1.56,5.3,4.02c0.23,0.74,0.33,1.63,0.33,2.77h-8.67c0.09,2.67,1.44,3.77,3.09,3.77 C123.47,55.6,124.45,54.78,124.68,53.64z"/> <path fill="currentColor" fill-rule="evenodd" clip-rule="evenodd" d="M167.38,50.95c0,4.3-2.26,6.6-6.35,6.6c-4.09,0-6.37-2.3-6.37-6.6v-10.3h2.79v10.21 c0,2.79,1.3,4.21,3.58,4.21c2.28,0,3.58-1.42,3.58-4.21V40.65h2.77V50.95z"/> <path fill="currentColor" fill-rule="evenodd" clip-rule="evenodd" d="M180.17,49.97v7.23h-2.65v-7c0-2.12-0.91-2.95-2.4-2.95c-1.51,0-2.7,1.14-2.7,3.4v6.56h-2.65V45.39h2.51v1.54 h0.05c0.75-1.07,1.98-1.81,3.54-1.81C178.54,45.11,180.17,46.74,180.17,49.97"/> <path fill="currentColor" fill-rule="evenodd" clip-rule="evenodd" d="M182.35,57.2L182.35,57.2V45.39H185V57.2H182.35z M182.35,43.18v-2.54H185v2.54H182.35z"/> <path fill="currentColor" fill-rule="evenodd" clip-rule="evenodd" d="M189.91,57.2l-4.12-11.81h2.77l1.53,4.81c0.56,1.72,1.05,3.42,1.51,5.16h0.05c0.46-1.74,0.95-3.44,1.51-5.16 l1.54-4.81h2.77l-4.12,11.81H189.91z"/> <path fill="currentColor" fill-rule="evenodd" clip-rule="evenodd" d="M199.82,50.09L199.82,50.09h5.98c-0.19-2.07-1.4-3.09-2.98-3.09C201.22,46.99,200.05,48.04,199.82,50.09 M205.59,53.64h2.72c-0.44,2.12-2.35,3.91-5.44,3.91c-3.61,0-5.72-2.58-5.72-6.39c0-3.49,2.09-6.12,5.67-6.12 c2.7,0,4.65,1.56,5.3,4.02c0.23,0.74,0.33,1.63,0.33,2.77h-8.67c0.09,2.67,1.44,3.77,3.09,3.77 C204.38,55.6,205.36,54.78,205.59,53.64z"/> <path fill="currentColor" fill-rule="evenodd" clip-rule="evenodd" d="M216.86,45.34v2.35c-0.33-0.07-0.63-0.09-0.93-0.09c-2.12,0-3.28,1.35-3.28,3.81v5.79H210V45.39h2.46v1.74 h0.05c0.79-1.28,1.91-1.91,3.37-1.91C216.19,45.23,216.56,45.27,216.86,45.34"/> <path fill="currentColor" fill-rule="evenodd" clip-rule="evenodd" d="M226.95,49.06h-2.56c0-1.42-0.84-2.09-2.26-2.09c-1.23,0-1.95,0.53-1.95,1.39c0,1.02,0.81,1.23,2.67,1.7 c2.16,0.56,4.47,1.07,4.47,3.88c0,2.14-1.91,3.6-4.95,3.6c-3.16,0-5.09-1.42-5.12-4.23h2.7c0,1.44,0.88,2.25,2.46,2.25 c1.35,0,2.14-0.58,2.14-1.46c0-1.21-0.93-1.44-2.98-1.95c-1.98-0.49-4.05-0.93-4.05-3.58c0-2.09,1.86-3.54,4.63-3.54 C225.16,45.04,226.93,46.44,226.95,49.06"/> <path fill="currentColor" fill-rule="evenodd" clip-rule="evenodd" d="M228.92,57.2L228.92,57.2V45.39h2.65V57.2H228.92z M228.92,43.18v-2.54h2.65v2.54H228.92z"/> <path fill="currentColor" fill-rule="evenodd" clip-rule="evenodd" d="M239.55,55.06v2.07c-0.39,0.12-1,0.21-1.49,0.21c-2.49,0-3.58-1.05-3.58-3.63v-6.3h-1.98v-2.02h1.98v-2.95 h2.65v2.95h2.3v2.02h-2.3v5.91c0,1.33,0.44,1.86,1.6,1.86C239.04,55.18,239.36,55.13,239.55,55.06"/> <path fill="currentColor" fill-rule="evenodd" clip-rule="evenodd" d="M246.88,57.71c-1.12,3-2.42,3.91-5.16,3.91c-0.51,0-0.98-0.07-1.33-0.16v-2.16c0.3,0.09,0.7,0.16,1.12,0.16 c1.44,0,2.07-0.54,2.63-2.16l-4.33-11.91h2.84l2.95,8.79h0.05l3.05-8.79h2.75L246.88,57.71z"/> </g> </g> </svg></a>
+    <nav aria-label="Sections">
+      <a href="#forest">Large-scale forest</a>
+      <a href="#detail">Ground detail</a>
+      <a href="#streaming">Streaming splat</a>
+      <a href="#simulation">Simulation</a>
+      <a href="#exploration">Exploration</a>
+      <a href="#cv">CV</a>
+    </nav>
+  </header>
+
+  <div class="hero">
+    <div class="hero-text">
+      <div>
+        <div class="eyebrow">Research demos · Computer Vision Group</div>
+        <h1>Photorealistic forest maps from a <em>consumer 360° camera</em></h1>
+      </div>
+      <div>
+        <p class="lede">Gaussian-splat reconstructions of real forests from a consumer 360° camera alone — <b>no LiDAR, no GNSS needed</b> — placed on the national map, built while the scan is still running, and used as worlds for drone simulation.</p>
+        <div class="authors">
+          <span class="names">Vinh D. Van, with Esa Rahtu and Joni Kämäräinen</span>
+          <span class="aff">Computer Vision Group, Tampere University</span>
+        </div>
+        <nav class="links" aria-label="Profiles">
+          <a href="media/cv/vinh_van_cv.pdf" target="_blank" rel="noopener">CV <span aria-hidden="true">(PDF)</span></a>
+          <a href="https://github.com/vinhvd749" target="_blank" rel="noopener">GitHub</a>
+          <a href="https://www.linkedin.com/in/vinh-d-van-b9070092" target="_blank" rel="noopener">LinkedIn</a>
+          <a href="#contact">Contact</a>
+        </nav>
+      </div>
+    </div>
+    <div class="hero-reel">
+      <figure class="clip hero-video" data-yt="flythrough">
+        <div class="frame"><video data-src="media/loops/hv22_flythrough.mp4" poster="media/img/hv22_flythrough.jpg" muted loop playsinline preload="none" aria-label="Fly-through of the hv22 forest stand splat"></video></div>
+        <figcaption class="reel-cap"><a href="#forest">A whole forest stand</a><span>29.2 M Gaussians · 1.02 km walk</span><a class="yt" target="_blank" rel="noopener" hidden>Full 60 s fly-through on YouTube ↗</a></figcaption>
+      </figure>
+      <figure class="clip hero-video">
+        <div class="frame"><video data-src="media/loops/rock_tour.mp4" poster="media/img/rock_tour.jpg" muted loop playsinline preload="none" aria-label="Camera tour around a mossy rock and over the forest floor in the small-rock splat"></video></div>
+        <figcaption class="reel-cap"><a href="#detail">The forest floor up close</a><span>10 M Gaussians · 20.44 dB on unseen photos</span></figcaption>
+      </figure>
+    </div>
+  </div>
+
+
+  <!-- ===================== 1. LARGE-SCALE ===================== -->
+  <section class="demo" id="forest" aria-labelledby="forest-h">
+    <div class="sec-head">
+      <div class="site"><span>hv22</span><span>Hervanta, Tampere</span><span>61.449° N, 23.853° E</span><span>ETRS-TM35FIN</span></div>
+      <h2 id="forest-h">A whole forest stand from one 360° camera walk</h2>
+      <div class="prose">
+        <p>A 22-minute walk with a consumer 360° camera through a forest stand on the Hervanta campus in Tampere — no LiDAR, and no GNSS needed to place it on the map. The result is a photorealistic, georeferenced model of the stand with 29.2 million Gaussians.</p>
+      </div>
+    </div>
+    <dl class="facts">
+      <div><dt>Walk</dt><dd>1.02 km <small>22 min</small></dd></div>
+      <div><dt>Camera</dt><dd>one 360° <small>Insta360 ONE RS 1-Inch</small></dd></div>
+      <div><dt>Gaussians</dt><dd>29.2 M</dd></div>
+      <div><dt>Held-out PSNR</dt><dd>19.75 dB <small>312 unseen photos</small></dd></div>
+    </dl>
+
+    <div class="sub">
+      <h3>On the national map</h3>
+      <div class="prose">
+        <p>The model sits in the Finnish national grid. The walls the splat saw (yellow) and the walls of a LiDAR scan of the same site (cyan, reference) fall on the outline of the Tietotalo building on the National Land Survey basic map (purple).</p>
+      </div>
+      <div class="mapview" id="mapview">
+        <div class="mv-controls">
+          <div class="seg" role="group" aria-label="Area">
+            <button type="button" data-view="stand" aria-pressed="true">Whole stand</button>
+            <button type="button" data-view="tietotalo" aria-pressed="false">Tietotalo close-up</button>
+          </div>
+          <label class="mv-range" for="mv-map">Map <input type="range" id="mv-map" min="0" max="100" value="75"></label>
+          <label class="chk"><input type="checkbox" id="mv-splat" checked> Splat</label>
+          <label class="chk"><input type="checkbox" id="mv-walls" checked> Splat walls</label>
+          <label class="chk"><input type="checkbox" id="mv-lidar" checked> LiDAR walls</label>
+        </div>
+        <div class="mv-frame" id="mv-frame" style="aspect-ratio: 1850 / 1450">
+          <img class="l-splat" src="media/img/stand_splat.jpg" alt="Top-down view of the splat: the forest stand between the road and the university building" width="1850" height="1450">
+          <img class="l-map" src="media/img/stand_pk.jpg" alt="" width="1850" height="1450">
+          <img class="l-lidar" src="media/img/stand_lidar.webp" alt="" width="1850" height="1450">
+          <img class="l-walls" src="media/img/stand_walls.webp" alt="" width="1850" height="1450">
+          <span class="scale" id="mv-scale" aria-hidden="true" style="width: 10.81%"><i></i>20 m</span>
+        </div>
+        <ul class="mv-legend">
+          <li><i class="k-yellow"></i>Walls in the splat</li>
+          <li><i class="k-cyan"></i>Walls in the backpack LiDAR (reference)</li>
+          <li><i class="k-purple"></i>NLS basic map: building footprint</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="sub">
+      <h3>Placed on the map without GNSS</h3>
+      <div class="prose">
+        <p>The same stand placed with no satellite receiver in the loop: its tree stems and its ground surface were matched to the National Land Survey's free airborne laser scan. The two matches share nothing but the model and agree to 0.13 m — and both put the stand 1.25 m from where the phone's GNSS had placed it.</p>
+      </div>
+      <dl class="facts">
+        <div><dt>Two independent matches</dt><dd>0.13 m <small>apart</small></dd></div>
+        <div><dt>Phone GNSS was off by</dt><dd>1.25 m</dd></div>
+        <div><dt>Ground match</dt><dd>±0.08 m <small>±0.11°</small></dd></div>
+      </dl>
+      <figure class="clip">
+        <div class="frame" style="aspect-ratio: 2000 / 944"><img src="media/img/no_gnss_match.jpg" alt="Left: the stand's 188 stems as orange rings on the national laser scan's tree tops in grey. Right: where the stand landed, the two matched layers 0.13 m apart and 1.25 m from the phone GNSS position" width="2000" height="944" loading="lazy"></div>
+        <figcaption><p>Left: the stand's 188 stems (orange) on the national laser scan's tree tops (grey), matched from no prior. Right: where it landed. The precisions are relative to the national scan, whose own stated planimetric accuracy is 0.6 m.</p></figcaption>
+      </figure>
+    </div>
+
+    <div class="sub">
+      <h3>Map layers from the splat</h3>
+      <div class="prose"><p>Tree stems and the ground under the vegetation, read from the splat: well-observed stems within 4–5 cm and the bare earth within 11 cm of a LiDAR survey (medians). Clips from an earlier 5.1 M-Gaussian model of the stand.</p></div>
+      <div class="grid-3">
+        <figure class="clip" data-yt="layer_trunks">
+          <div class="frame ar-layer"><video data-src="media/loops/layer_trunks.mp4" poster="media/img/layer_trunks.jpg" muted loop playsinline preload="none" aria-label="Trunks segmented in the splat, shown in orange"></video></div>
+          <figcaption><h3>Trunk segmentation</h3><p>Stems identified in the splat in orange, the rest of the forest in grey.</p><a class="yt" target="_blank" rel="noopener" hidden>Full video ↗</a></figcaption>
+        </figure>
+        <figure class="clip" data-yt="layer_lidar">
+          <div class="frame ar-layer"><video data-src="media/loops/layer_lidar.mp4" poster="media/img/layer_lidar.jpg" muted loop playsinline preload="none" aria-label="LiDAR bare-earth surface drawn inside the splat"></video></div>
+          <figcaption><h3>Bare earth, LiDAR reference</h3><p>The ground under the vegetation from the LiDAR survey, coloured by micro-relief and drawn inside the splat.</p><a class="yt" target="_blank" rel="noopener" hidden>Full video ↗</a></figcaption>
+        </figure>
+        <figure class="clip" data-yt="layer_ground">
+          <div class="frame ar-layer"><video data-src="media/loops/layer_ground.mp4" poster="media/img/layer_ground.jpg" muted loop playsinline preload="none" aria-label="Ground terrain coloured by micro-relief under the trees"></video></div>
+          <figcaption><h3>Ground terrain</h3><p>Paths, hollows and boulders show in the terrain under the trees, coloured by micro-relief.</p><a class="yt" target="_blank" rel="noopener" hidden>Full video ↗</a></figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== 2. DETAIL ===================== -->
+  <section class="demo" id="detail" aria-labelledby="detail-h">
+    <div class="sec-head">
+      <div class="site"><span>small rock</span><span>forest floor around one mossy boulder</span><span>recorded 30 Sep 2026</span></div>
+      <h2 id="detail-h">Ground-level detail</h2>
+      <div class="prose">
+        <p>A 4.4-minute walk around a mossy rock with the same consumer 360° camera. Lichen on the stone, moss, fallen birch leaves, twigs and roots stay sharp from half a metre away.</p>
+      </div>
+    </div>
+    <dl class="facts">
+      <div><dt>Capture</dt><dd>264 s <small>one walk</small></dd></div>
+      <div><dt>Gaussians</dt><dd>10 M</dd></div>
+      <div><dt>Held-out PSNR</dt><dd>20.44 dB <small>363 unseen photos</small></dd></div>
+    </dl>
+
+    <div class="sub">
+      <h3>Against Varjo Teleport, same recording</h3>
+      <div class="cmp">
+        <figure class="clip cmp-video">
+          <div class="frame ar-stack"><video data-src="media/loops/rock_compare_stack.mp4" poster="media/img/rock_compare_stack.jpg" muted loop playsinline preload="none" aria-label="The same camera path in both splats: ours on top, Varjo Teleport below"></video></div>
+          <figcaption><p>Top: ours. Bottom: Varjo Teleport. Same camera path.</p></figcaption>
+        </figure>
+        <div class="cmp-side">
+          <div class="prose">
+            <p>We gave Varjo Teleport the same 360° video, all 264 seconds of it. Both splats fly the same camera path: ours on top, Teleport below.</p>
+          </div>
+          <dl class="facts stack">
+            <div><dt>Ours</dt><dd>20.44 dB <small>SSIM 0.707 · LPIPS 0.290</small></dd></div>
+            <div><dt>Varjo Teleport</dt><dd>15.88 dB <small>SSIM 0.460 · LPIPS 0.519</small></dd></div>
+            <div><dt>Gaussians</dt><dd>10 M <small>vs 2.3 M in Teleport's export</small></dd></div>
+          </dl>
+          <p class="note">PSNR on the same 363 held-out photos, people excluded. Teleport trained on every frame of the video, the held-out ones included.</p>
+          <figure class="clip">
+            <div class="frame ar-rock"><video data-src="media/loops/rock_varjo.mp4" poster="media/img/rock_varjo.jpg" muted loop playsinline preload="none" aria-label="Varjo Teleport capture of the same site made with its iPhone app"></video></div>
+            <figcaption><h3>Teleport with its own app</h3><p>An earlier capture of the same site made with the Teleport app on an iPhone 15 Pro, shown in Teleport's own viewer. It is a different recording, so it has no score on our held-out photos.</p></figcaption>
+          </figure>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== 3. STREAMING ===================== -->
+  <section class="demo" id="streaming" aria-labelledby="streaming-h">
+    <div class="sec-head">
+      <div class="site"><span>AgiPIX sensor rig</span><span>LiDAR + 360° camera</span><span>one RTX 3090</span></div>
+      <h2 id="streaming-h">Splats that build while you scan</h2>
+      <div class="prose">
+        <p>The splat trains while the scan is still running, instead of after it.</p>
+      </div>
+    </div>
+    <div class="grid-2">
+      <figure class="clip" data-yt="stream_room">
+        <div class="frame ar-16x9"><video data-src="media/loops/stream_rig1004.mp4" poster="media/img/stream_rig1004.jpg" muted loop playsinline preload="none" aria-label="Streaming scan-to-splat timeline of an office room"></video></div>
+        <figcaption>
+          <h3>Office room, LiDAR + 360° live stream <span class="spd">×10</span></h3>
+          <p>143 s around one room. <b>29.1 dB</b> on held-out views 8.2 minutes after the first image. The rig and people are masked out. Replayed from the recorded log at capture speed.</p>
+        </figcaption>
+      </figure>
+      <figure class="clip" data-yt="stream_hv24">
+        <div class="frame ar-hv24"><video data-src="media/loops/stream_hv24.mp4" poster="media/img/stream_hv24.jpg" muted loop playsinline preload="none" aria-label="Streaming splat timeline of the hv24 walk, bird's-eye view"></video></div>
+        <figcaption>
+          <h3>A 578 m walk, office to forest <span class="spd">×30</span></h3>
+          <p>A 10-minute walk from an office through a street into forest. Training starts 1 min 18 s after the first image and ends at <b>20.1 dB</b> on held-out views.</p>
+        </figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- ===================== 4. SIMULATION ===================== -->
+  <section class="demo" id="simulation" aria-labelledby="simulation-h">
+    <div class="sec-head">
+      <div class="site"><span>NVIDIA Isaac Sim 6.0</span><span>hv22 splat as the world</span><span>times are simulated time</span></div>
+      <h2 id="simulation-h">Flying inside the reconstructed forest</h2>
+      <div class="prose">
+        <p>The hv22 reconstruction becomes a world for drone simulation.</p>
+      </div>
+    </div>
+    <figure class="clip feature" data-yt="crash">
+      <div class="frame ar-sq"><video data-src="media/loops/sim_crash.mp4" poster="media/img/sim_crash.jpg" muted loop playsinline preload="none" aria-label="Drone clips a reconstructed trunk at high speed and falls"></video></div>
+      <figcaption>
+        <h3>High-speed crash into a real trunk <span class="spd">real speed</span></h3>
+        <p>After a smooth curve through the forest, a 10 m/s dash clips a reconstructed tree trunk. The motors cut and the drone tumbles onto the terrain. Real physics, not an animation.</p>
+        <dl class="facts stack">
+          <div><dt>Impact speed</dt><dd>9.3 m/s</dd></div>
+          <div><dt>Peak spin</dt><dd>22 rad/s</dd></div>
+          <div><dt>At rest after</dt><dd>1.7 s</dd></div>
+        </dl>
+      </figcaption>
+    </figure>
+    <figure class="clip" data-yt="survey">
+      <div class="frame ar-lawn"><video data-src="media/loops/sim_lawnmower.mp4" poster="media/img/sim_lawnmower.jpg" muted loop playsinline preload="none" aria-label="Autonomous lawnmower survey flight with the live LiDAR map"></video></div>
+      <figcaption>
+        <h3>Autonomous survey, mapped live <span class="spd">×3</span></h3>
+        <p>Flown 2 m above the ground at 1.8 m/s with the LiDAR map built live (right). 373 m flown, <b>0.22 m</b> path error (RMSE), never closer than 0.55 m to a trunk.</p>
+      </figcaption>
+    </figure>
+  </section>
+
+  <!-- ===================== 5. EXPLORATION ===================== -->
+  <section class="demo" id="exploration" aria-labelledby="exploration-h">
+    <div class="sec-head">
+      <div class="site"><span>NVIDIA Isaac Sim 6.0</span><span>DJI Tello</span><span>indoor, no prior map</span></div>
+      <h2 id="exploration-h">Autonomous exploration and inspection</h2>
+      <div class="prose">
+        <p>A small drone decides by itself where to fly and where to look next, in a building it has never seen.</p>
+      </div>
+    </div>
+    <figure class="clip" data-yt="tello">
+        <div class="frame ar-16x9"><video data-src="media/loops/sim_tello.mp4" poster="media/img/sim_tello.jpg" muted loop playsinline preload="none" aria-label="Simulated DJI Tello exploring a building by itself"></video></div>
+        <figcaption>
+          <h3>A Tello explores a building by itself <span class="spd">×6</span></h3>
+          <p>A simulated DJI Tello explores an unknown building for 10 minutes, with depth from its own camera. <b>56 %</b> of the floor seen, 0 collisions.</p>
+        </figcaption>
+      </figure>
+  </section>
+
+  <section class="demo cv" id="cv" aria-labelledby="cv-h">
+    <div class="sec-head">
+      <h2 id="cv-h">CV</h2>
+    </div>
+    <div class="cv-grid">
+      <a class="cv-page" href="media/cv/vinh_van_cv.pdf" target="_blank" rel="noopener" aria-label="CV page 1 (opens the PDF)"><img src="media/cv/cv_page1.jpg" alt="CV page 1: personal information and work experience" width="579" height="819" loading="lazy"></a>
+      <a class="cv-page" href="media/cv/vinh_van_cv.pdf" target="_blank" rel="noopener" aria-label="CV page 2 (opens the PDF)"><img src="media/cv/cv_page2.jpg" alt="CV page 2: work experience, publications and education" width="579" height="819" loading="lazy"></a>
+      <div class="cv-side">
+        <p>Research assistant in the Computer Vision Group at Tampere University. Before that, a data scientist in industry: fraud detection, maps and machine translation.</p>
+        <nav class="links stack" aria-label="Profiles">
+          <a href="media/cv/vinh_van_cv.pdf" target="_blank" rel="noopener">Open the CV (PDF) ↗</a>
+          <a href="https://github.com/vinhvd749" target="_blank" rel="noopener">GitHub · vinhvd749 ↗</a>
+          <a href="https://www.linkedin.com/in/vinh-d-van-b9070092" target="_blank" rel="noopener">LinkedIn · vinh-d-van ↗</a>
+        </nav>
+      </div>
+    </div>
+  </section>
+
+  <footer id="contact">
+    <div>
+      <h2>Contact</h2>
+      <div class="copyrow"><code id="mail">vinh.van@tuni.fi</code><button class="copy" type="button" id="copy-mail">Copy address</button></div>
+      <p class="foot-links"><a href="https://github.com/vinhvd749" target="_blank" rel="noopener">GitHub</a> · <a href="https://www.linkedin.com/in/vinh-d-van-b9070092" target="_blank" rel="noopener">LinkedIn</a> · <a href="media/cv/vinh_van_cv.pdf" target="_blank" rel="noopener">CV (PDF)</a></p>
+      <p class="updated">Updated 12 Oct 2026</p>
+    </div>
+    <div>
+      <h2>Credits</h2>
+      <p>Basemaps and building outlines: National Land Survey of Finland, CC BY 4.0. Simulation: NVIDIA Isaac Sim with the Pegasus Simulator. Varjo Teleport is a product of Varjo. Its splats come from our own captures: the same 360° video as ours, and a capture with its app on an iPhone 15 Pro.</p>
+    </div>
+  </footer>
+</div>
+
+<script>
+/* YouTube ids for the full-length videos. Fill these in after upload; empty = the link stays hidden. */
+const YT = {
+  flythrough: "", layer_trunks: "", layer_bare_earth: "", layer_ground: "", layer_lidar: "",
+  detail: "", stream_room: "", stream_hv24: "", survey: "", crash: "", tello: ""
+};
+
+/* Hosts where a YouTube iframe may be embedded (static hosting). Elsewhere the link opens YouTube. */
+const CAN_EMBED = location.protocol === "file:" || /(^|\.)github\.io$|^localhost$|^127\.0\.0\.1$/.test(location.hostname);
+
+document.querySelectorAll("[data-yt]").forEach(el => {
+  const id = YT[el.dataset.yt];
+  const link = el.matches("a.yt") ? el : el.querySelector("a.yt");
+  if (!id || !link) return;
+  link.href = "https://youtu.be/" + id;
+  link.hidden = false;
+  if (CAN_EMBED && el.matches("figure")) {
+    link.addEventListener("click", ev => {
+      ev.preventDefault();
+      const frame = el.querySelector(".frame");
+      frame.innerHTML = '<iframe src="https://www.youtube-nocookie.com/embed/' + id + '?autoplay=1&rel=0" title="YouTube video" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>';
+      frame.style.aspectRatio = "16 / 9";
+    });
+  }
+});
+
+/* Loops: load on first approach, play only while on screen; respect reduced motion. */
+const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const vids = [...document.querySelectorAll("video[data-src]")];
+const load = v => { if (!v.src) { v.src = v.dataset.src; v.preload = "auto"; } };
+if (still) {
+  vids.forEach(v => { v.controls = true; v.preload = "none"; v.addEventListener("play", () => load(v), { once: true }); v.src = v.dataset.src; });
+} else if ("IntersectionObserver" in window) {
+  const io = new IntersectionObserver(entries => {
+    for (const e of entries) {
+      const v = e.target;
+      if (e.isIntersecting) { load(v); v.play().catch(() => { v.controls = true; }); }
+      else if (!v.paused) v.pause();
+    }
+  }, { rootMargin: "200px 0px", threshold: 0.15 });
+  vids.forEach(v => io.observe(v));
+} else {
+  vids.forEach(v => { load(v); v.autoplay = true; });
+}
+
+/* Map view: one frame, layers stacked; swap area and map, fade the map, toggle layers */
+const MV = {
+  stand: { w: 1850, h: 1450, scale: ["10.81%", "20 m"], alt: "Top-down view of the splat: the forest stand between the road and the university building" },
+  tietotalo: { w: 2000, h: 1029, scale: ["10%", "14 m"], alt: "Close-up of the Tietotalo wings at the forest edge: splat walls in yellow and LiDAR walls in cyan on the purple NLS footprint" }
+};
+const mv = { view: "stand", map: "pk" };
+const frame = document.getElementById("mv-frame");
+function mvRender() {
+  const v = MV[mv.view];
+  frame.style.aspectRatio = v.w + " / " + v.h;
+  const set = (cls, file) => { const im = frame.querySelector(cls); im.src = "media/img/" + mv.view + "_" + file; im.width = v.w; im.height = v.h; };
+  set(".l-splat", "splat.jpg"); set(".l-map", mv.map + ".jpg"); set(".l-lidar", "lidar.webp"); set(".l-walls", "walls.webp");
+  frame.querySelector(".l-splat").alt = v.alt;
+  const sc = document.getElementById("mv-scale"); sc.style.width = v.scale[0]; sc.lastChild.textContent = v.scale[1];
+  document.querySelectorAll("#mapview [data-view]").forEach(b => b.setAttribute("aria-pressed", b.dataset.view === mv.view));
+}
+document.querySelectorAll("#mapview [data-view]").forEach(b => b.addEventListener("click", () => { mv.view = b.dataset.view; mvRender(); }));
+const mapRange = document.getElementById("mv-map");
+mapRange.addEventListener("input", () => frame.style.setProperty("--map", mapRange.value / 100));
+[["mv-splat", ".l-splat"], ["mv-walls", ".l-walls"], ["mv-lidar", ".l-lidar"]].forEach(([id, cls]) => {
+  const box = document.getElementById(id);
+  box.addEventListener("change", () => { frame.querySelector(cls).hidden = !box.checked; });
+});
+
+/* Copy e-mail */
+document.getElementById("copy-mail").addEventListener("click", async ev => {
+  const btn = ev.currentTarget, text = document.getElementById("mail").textContent;
+  try { await navigator.clipboard.writeText(text); btn.textContent = "Copied"; }
+  catch { const r = document.createRange(); r.selectNodeContents(document.getElementById("mail")); const s = getSelection(); s.removeAllRanges(); s.addRange(r); btn.textContent = "Selected, press Ctrl+C"; }
+  setTimeout(() => { btn.textContent = "Copy address"; }, 2200);
+});
+</script>
