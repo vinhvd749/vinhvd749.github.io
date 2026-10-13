@@ -371,9 +371,9 @@ button.copy:hover { border-color: var(--accent); }
       <dl class="facts cmp-facts">
         <div><dt>Ours</dt><dd>20.44 dB <small>SSIM 0.707 · LPIPS 0.290</small></dd></div>
         <div><dt>Varjo Teleport</dt><dd>15.88 dB <small>SSIM 0.460 · LPIPS 0.519</small></dd></div>
-        <div><dt>Gaussians</dt><dd>10 M <small>vs 2.3 M in Teleport's export</small></dd></div>
+        <div><dt>Gaussians</dt><dd>10 M <small>vs 2.3 M in Teleport's export, cap set at 4 M</small></dd></div>
       </dl>
-      <p class="note">PSNR on the same 363 held-out photos, people excluded. Teleport trained on every frame of the video, the held-out ones included.</p>
+      <p class="note">PSNR on the same 363 held-out photos, people excluded. Teleport trained on every frame of the video, the held-out ones included. Its Gaussian cap was set at 4 M, its default, and it stopped at 2.3 M.</p>
     </div>
 
     <div class="sub">
