@@ -95,6 +95,15 @@ p { margin: 0; }
 .speed { position: absolute; right: 0.6rem; top: 0.6rem; font-family: var(--f-mono); font-size: 0.72rem; color: #E9EFEA; background: rgb(8 12 10 / 0.72); padding: 0.2rem 0.45rem; border-radius: 2px; pointer-events: none; }
 .hero-video { margin: 0; gap: 0.55rem; }
 .hero-video .frame { aspect-ratio: 1 / 1; }
+/* hero lead clip: full width at 2:1 on desktop, the square cut on phones (the hidden clip never loads) */
+.hero-lead { grid-column: 1 / -1; }
+.hero-video .frame.hl-wide { aspect-ratio: 2 / 1; }
+.hero-video .frame.hl-sq { display: none; }
+/* YouTube facade: our poster + a play button; the player loads only on click */
+.yt-facade { display: block; color: inherit; }
+.yt-play { position: absolute; left: 50%; top: 50%; width: 72px; height: 50px; margin: -25px 0 0 -36px; border-radius: 12px; background: rgb(8 12 10 / 0.75); transition: background 0.15s; }
+.yt-play::after { content: ""; position: absolute; left: 29px; top: 15px; border-style: solid; border-width: 10px 0 10px 17px; border-color: transparent transparent transparent #fff; }
+.yt-facade:hover .yt-play, .yt-facade:focus-visible .yt-play { background: var(--accent); }
 
 figure { margin: 0; min-width: 0; }
 .clip { display: grid; gap: 0.7rem; align-content: start; }
@@ -203,6 +212,8 @@ button.copy:hover { border-color: var(--accent); }
 @media (max-width: 680px) {
   .grid-2, .grid-3, .grid-sim, .feature, .hero-reel, footer { grid-template-columns: minmax(0, 1fr); }
   .grid-3 { gap: 1.8rem; }
+  .hero-video .frame.hl-wide { display: none; }
+  .hero-video .frame.hl-sq { display: block; }
   .bar nav { display: none; }
   .facts div { padding-right: 1rem; margin-right: 1rem; }
   .facts dd { font-size: 1.12rem; }
@@ -217,6 +228,7 @@ button.copy:hover { border-color: var(--accent); }
     <nav aria-label="Sections">
       <a href="#forest">Large-scale forest</a>
       <a href="#detail">Ground detail</a>
+      <a href="#deadtree">Fallen tree</a>
       <a href="#streaming">Streaming splat</a>
       <a href="#simulation">Simulation</a>
       <a href="#exploration">Exploration</a>
@@ -245,6 +257,11 @@ button.copy:hover { border-color: var(--accent); }
       </div>
     </div>
     <div class="hero-reel">
+      <figure class="clip hero-video hero-lead" data-yt="deadtree">
+        <div class="frame hl-wide"><video data-src="media/loops/deadtree_wide.mp4" poster="media/img/deadtree_wide.jpg" muted loop playsinline preload="none" aria-label="Camera circling the upturned root plate of a fallen tree in the dead-tree splat"></video></div>
+        <div class="frame hl-sq"><video data-src="media/loops/deadtree_sq.mp4" poster="media/img/deadtree_sq.jpg" muted loop playsinline preload="none" aria-label="Camera circling the upturned root plate of a fallen tree in the dead-tree splat"></video></div>
+        <figcaption class="reel-cap"><a href="#deadtree">A fallen tree, roots and all</a><span>30 M Gaussians · 12-minute walk · 360° + action camera</span><a class="yt" target="_blank" rel="noopener" hidden>Full 2-min video on YouTube ↗</a></figcaption>
+      </figure>
       <figure class="clip hero-video" data-yt="flythrough">
         <div class="frame"><video data-src="media/loops/hv22_flythrough.mp4" poster="media/img/hv22_flythrough.jpg" muted loop playsinline preload="none" aria-label="Fly-through of the hv22 forest stand splat"></video></div>
         <figcaption class="reel-cap"><a href="#forest">A whole forest stand</a><span>29.2 M Gaussians · 1.02 km walk</span><a class="yt" target="_blank" rel="noopener" hidden>Full 60 s fly-through on YouTube ↗</a></figcaption>
@@ -389,6 +406,26 @@ button.copy:hover { border-color: var(--accent); }
     </div>
   </section>
 
+  <!-- ===================== 2b. FALLEN TREE ===================== -->
+  <section class="demo" id="deadtree" aria-labelledby="deadtree-h">
+    <div class="sec-head">
+      <div class="site"><span>dead wood</span><span>Hervanta campus, Tampere</span><span>recorded 13 Oct 2026</span></div>
+      <h2 id="deadtree-h">A fallen tree, roots and all</h2>
+      <div class="prose">
+        <p>A 12-minute walk with a consumer 360° camera and an action camera through 44 × 44 m of forest with fallen dead wood. The model keeps the upturned root plate, the trunk lying across the slope and the forest floor around it.</p>
+      </div>
+    </div>
+    <dl class="facts">
+      <div><dt>Capture</dt><dd>12 min <small>one walk, two cameras</small></dd></div>
+      <div><dt>Gaussians</dt><dd>30 M</dd></div>
+      <div><dt>Area</dt><dd>44 × 44 m</dd></div>
+    </dl>
+    <figure class="clip">
+      <a class="frame ar-16x9 yt-facade" href="https://youtu.be/felw2DMTtu8" target="_blank" rel="noopener" data-yt-id="felw2DMTtu8" aria-label="Play the 2-minute dead-tree video (YouTube)"><img src="media/img/deadtree_full.jpg" alt="The upturned root plate of the fallen tree in the splat" loading="lazy" width="1600" height="900"><span class="yt-play" aria-hidden="true"></span></a>
+      <figcaption><p>Two minutes around the tree: a high overview first, then down to the root plate, along the trunk and over the ground. <a href="https://youtu.be/felw2DMTtu8" target="_blank" rel="noopener">Watch on YouTube ↗</a></p></figcaption>
+    </figure>
+  </section>
+
   <!-- ===================== 3. STREAMING ===================== -->
   <section class="demo" id="streaming" aria-labelledby="streaming-h">
     <div class="sec-head">
@@ -501,7 +538,7 @@ button.copy:hover { border-color: var(--accent); }
 /* YouTube ids for the full-length videos. Fill these in after upload; empty = the link stays hidden. */
 const YT = {
   flythrough: "", layer_trunks: "", layer_bare_earth: "", layer_ground: "", layer_lidar: "",
-  detail: "", stream_room: "", stream_hv24: "", survey: "", crash: "", tello: ""
+  detail: "", stream_room: "", stream_hv24: "", survey: "", crash: "", tello: "", deadtree: "felw2DMTtu8"
 };
 
 /* Hosts where a YouTube iframe may be embedded (static hosting). Elsewhere the link opens YouTube. */
@@ -516,11 +553,23 @@ document.querySelectorAll("[data-yt]").forEach(el => {
   if (CAN_EMBED && el.matches("figure")) {
     link.addEventListener("click", ev => {
       ev.preventDefault();
-      const frame = el.querySelector(".frame");
+      const frame = [...el.querySelectorAll(".frame")].find(f => f.offsetParent !== null);
       frame.innerHTML = '<iframe src="https://www.youtube-nocookie.com/embed/' + id + '?autoplay=1&rel=0" title="YouTube video" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>';
       frame.style.aspectRatio = "16 / 9";
     });
   }
+});
+
+/* YouTube facades: swap the poster for the player on click where embedding works; elsewhere the link opens YouTube */
+document.querySelectorAll(".yt-facade").forEach(a => {
+  if (!CAN_EMBED) return;
+  a.addEventListener("click", ev => {
+    ev.preventDefault();
+    const box = document.createElement("div");
+    box.className = a.className.replace("yt-facade", "").trim();
+    box.innerHTML = '<iframe src="https://www.youtube-nocookie.com/embed/' + a.dataset.ytId + '?autoplay=1&rel=0" title="YouTube video" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>';
+    a.replaceWith(box);
+  });
 });
 
 /* Loops: load on first approach, play only while on screen; respect reduced motion. */
