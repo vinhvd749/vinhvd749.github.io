@@ -151,6 +151,27 @@ section.demo { border-top: 1px solid var(--rule); padding-block: 3.6rem 0.5rem; 
 .cmp-app { display: grid; grid-template-columns: minmax(0, 420px) minmax(0, 1fr); gap: 1.2rem 2rem; align-items: start; }
 .note { font-size: 0.92rem; line-height: 1.5; color: var(--ink-2); max-width: var(--measure); } .ar-lawn { aspect-ratio: 1280 / 668; } .ar-hv24 { aspect-ratio: 1892 / 1080; }
 
+/* ---------- compare slider: the model on the left of the line, its label layer on the right ---------- */
+.compare { position: relative; touch-action: pan-y; --pos: 50%; }
+.compare img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+.compare .cmp-top { clip-path: inset(0 0 0 var(--pos)); }
+.compare::after { content: ""; position: absolute; top: 0; bottom: 0; left: var(--pos); width: 2px; margin-left: -1px; background: #FFFFFF; box-shadow: 0 0 0 1px rgb(0 0 0 / 0.25); pointer-events: none; }
+.compare .knob { position: absolute; top: 50%; left: var(--pos); width: 34px; height: 34px; margin: -17px 0 0 -17px; border-radius: 50%; background: #FFFFFF; box-shadow: 0 1px 4px rgb(0 0 0 / 0.35); pointer-events: none; z-index: 2; }
+.compare .knob::before, .compare .knob::after { content: ""; position: absolute; top: 11px; border-style: solid; border-color: transparent; }
+.compare .knob::before { left: 6px; border-width: 6px 7px 6px 0; border-right-color: #16201A; }
+.compare .knob::after { right: 6px; border-width: 6px 0 6px 7px; border-left-color: #16201A; }
+.compare input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: ew-resize; z-index: 3; }
+.compare input:focus-visible + .knob { outline: 3px solid var(--accent); outline-offset: 2px; }
+.cmp-l, .cmp-r { position: absolute; bottom: 0.6rem; font-family: var(--f-mono); font-size: 0.72rem; color: #E9EFEA; background: rgb(8 12 10 / 0.72); padding: 0.28rem 0.5rem; border-radius: 2px; pointer-events: none; z-index: 1; }
+.cmp-l { left: 0.6rem; } .cmp-r { right: 0.6rem; }
+.keys { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0.3rem 1rem; font-family: var(--f-display); font-size: 0.86rem; color: var(--ink-2); }
+.keys li { display: inline-flex; align-items: center; gap: 0.4rem; }
+.keys i { width: 0.8rem; height: 0.8rem; border-radius: 2px; flex: none; }
+.map-card { background: #FFFFFF; border: 1px solid var(--rule); border-radius: 3px; overflow: hidden; }
+.map-card img { display: block; width: 100%; height: auto; }
+.seg-map { display: grid; grid-template-columns: minmax(0, 0.8fr) minmax(0, 1fr); gap: 1.4rem 2.2rem; align-items: start; }
+.ar-sasa { aspect-ratio: 1282 / 366; }
+
 /* ---------- map view: splat and NLS maps stacked in ONE frame ---------- */
 .mapview { display: grid; gap: 0.75rem; }
 .mv-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem 1.1rem; font-family: var(--f-display); font-size: 0.86rem; }
@@ -208,6 +229,7 @@ button.copy:hover { border-color: var(--accent); }
   .facts.cmp-facts div:last-child { border-bottom: 0; }
   .cmp-app { grid-template-columns: minmax(0, 1fr); }
   .map-pair { grid-template-columns: minmax(0, 1fr); }
+  .seg-map { grid-template-columns: minmax(0, 1fr); }
 }
 @media (max-width: 680px) {
   .grid-2, .grid-3, .grid-sim, .feature, .hero-reel, footer { grid-template-columns: minmax(0, 1fr); }
@@ -229,6 +251,7 @@ button.copy:hover { border-color: var(--accent); }
       <a href="#forest">Large-scale forest</a>
       <a href="#detail">Ground detail</a>
       <a href="#deadtree">Combining cameras</a>
+      <a href="#labels">Species &amp; ground</a>
       <a href="#streaming">Streaming splat</a>
       <a href="#simulation">Simulation</a>
       <a href="#exploration">Exploration</a>
@@ -243,7 +266,7 @@ button.copy:hover { border-color: var(--accent); }
         <h1>Photorealistic forest maps from a <em>consumer 360° camera</em></h1>
       </div>
       <div>
-        <p class="lede">Gaussian-splat reconstructions of real forests from a consumer 360° camera alone — <b>no LiDAR, no GNSS needed</b> — placed on the national map, built while the scan is still running, and used as worlds for drone simulation.</p>
+        <p class="lede">Gaussian-splat reconstructions of real forests from a consumer 360° camera alone — <b>no LiDAR, no GNSS needed</b> — placed on the national map, labelled with tree species and ground cover, built while the scan is still running, and used as worlds for drone simulation.</p>
         <div class="authors">
           <span class="names">Vinh Van, with Esa Rahtu and Joni Kämäräinen</span>
           <span class="aff"><a href="https://research.tuni.fi/vision/" target="_blank" rel="noopener">Computer Vision Group</a>, Tampere University</span>
@@ -426,6 +449,63 @@ button.copy:hover { border-color: var(--accent); }
     </figure>
   </section>
 
+  <!-- ===================== 2c. SPECIES + GROUND COVER ===================== -->
+  <section class="demo" id="labels" aria-labelledby="labels-h">
+    <div class="sec-head">
+      <div class="site"><span>dead wood</span><span>Hervanta campus, Tampere</span><span>the same 12-minute walk</span></div>
+      <h2 id="labels-h">What grows where: tree species and ground cover</h2>
+      <div class="prose">
+        <p>Every Gaussian in the model carries a label: the species of the tree it belongs to and, on the ground, what covers it. The labels come from the photos of the same walk, with no LiDAR. Drag the line to compare the model with its labels.</p>
+      </div>
+    </div>
+    <dl class="facts">
+      <div><dt>Trunks with a species</dt><dd>83 of 91 <small>the rest left unnamed, not guessed</small></dd></div>
+      <div><dt>Checked trunks named right</dt><dd>81 of 81 <small>two plots · pine, spruce, birch</small></dd></div>
+      <div><dt>Ground-cover types</dt><dd>18</dd></div>
+    </dl>
+    <div class="grid-2">
+      <figure class="clip">
+        <div class="frame compare" style="aspect-ratio: 1 / 1" data-compare>
+          <img src="media/img/seg_trees_model.jpg" alt="The 3D model among birches and pines" width="1080" height="1080" loading="lazy">
+          <img class="cmp-top" src="media/img/seg_trees_species.jpg" alt="The same view with every trunk coloured by its species" width="1080" height="1080" loading="lazy">
+          <span class="cmp-l">3D model</span><span class="cmp-r">Tree species</span>
+          <input type="range" min="0" max="100" value="50" step="0.5" aria-label="Move the line between the model and the species layer">
+          <span class="knob" aria-hidden="true"></span>
+        </div>
+        <figcaption>
+          <h3>Tree species on every trunk</h3>
+          <ul class="keys"><li><i style="background:#FF8A2A"></i>Scots pine</li><li><i style="background:#3FD38A"></i>Norway spruce</li><li><i style="background:#5FB4FF"></i>birch</li><li><i style="background:#E06BD0"></i>aspen and other broadleaves</li></ul>
+          <p>Each trunk takes its tree's species from base to top; crowns are tinted. A render of the model, not a photograph.</p>
+        </figcaption>
+      </figure>
+      <figure class="clip">
+        <div class="frame compare" style="aspect-ratio: 1 / 1" data-compare>
+          <img src="media/img/seg_ground_model.jpg" alt="The 3D model of the forest floor: mossy boulders, dwarf shrubs and fallen leaves" width="1080" height="1080" loading="lazy">
+          <img class="cmp-top" src="media/img/seg_ground_cover.jpg" alt="The same view with the forest floor coloured by what covers it" width="1080" height="1080" loading="lazy">
+          <span class="cmp-l">3D model</span><span class="cmp-r">Ground cover</span>
+          <input type="range" min="0" max="100" value="50" step="0.5" aria-label="Move the line between the model and the ground-cover layer">
+          <span class="knob" aria-hidden="true"></span>
+        </div>
+        <figcaption>
+          <h3>What covers the forest floor</h3>
+          <ul class="keys"><li><i style="background:#F2A640"></i>leaf litter</li><li><i style="background:#661ABF"></i>bilberry</li><li><i style="background:#D91A40"></i>lingonberry</li><li><i style="background:#8CD91A"></i>moss</li><li><i style="background:#FFCC0D"></i>dead wood</li><li><i style="background:#268CF2"></i>rock</li><li><i style="background:#007373"></i>saplings</li><li><i style="background:#8CF2F2"></i>herbs</li></ul>
+          <p>An early layer with 18 types in all; about two in three patches were named right in a blind check.</p>
+        </figcaption>
+      </figure>
+    </div>
+    <div class="sub">
+      <h3>Every trunk on the map</h3>
+      <div class="seg-map">
+        <div class="map-card"><img src="media/img/seg_stand_map.svg" alt="Top-down map of the plot: 91 trunks as coloured symbols by species, sized by diameter, over the bare-earth relief with contour lines and the walked path" width="960" height="1400" loading="lazy"></div>
+        <div class="prose">
+          <p>The same plot from above: the 91 trunks the walk found, by species and sized by their diameter, on the bare earth read from the same model (contours every 0.5 m, the walk in blue). The tree list behind it carries each trunk's position, species, diameter and height.</p>
+          <ul class="keys"><li><i style="background:#C05E1C;border-radius:50%"></i>pine 31</li><li><i style="background:#3CAA70"></i>spruce 24</li><li><i style="background:#4A93E6"></i>birch 23</li><li><i style="background:#B04E9C"></i>other broadleaf 5</li><li><i style="background:#8B9893;border-radius:50%"></i>unnamed 8</li></ul>
+          <p class="note">Species checks are against labels set by eye from close-up photos before the result was known, not a field inventory. On the larger hv22 stand, 177 of 186 stems are named and all 53 checked ones are right.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- ===================== 3. STREAMING ===================== -->
   <section class="demo" id="streaming" aria-labelledby="streaming-h">
     <div class="sec-head">
@@ -486,12 +566,19 @@ button.copy:hover { border-color: var(--accent); }
   <!-- ===================== 5. EXPLORATION ===================== -->
   <section class="demo" id="exploration" aria-labelledby="exploration-h">
     <div class="sec-head">
-      <div class="site"><span>NVIDIA Isaac Sim 6.0</span><span>DJI Tello</span><span>indoor, no prior map</span></div>
+      <div class="site"><span>NVIDIA Isaac Sim</span><span>no prior map</span></div>
       <h2 id="exploration-h">Autonomous exploration and inspection</h2>
       <div class="prose">
-        <p>A small drone decides by itself where to fly and where to look next, in a building it has never seen.</p>
+        <p>Drones that decide by themselves where to fly and where to look next.</p>
       </div>
     </div>
+    <figure class="clip">
+      <div class="frame ar-sasa"><video data-src="media/loops/sim_sasa.mp4" poster="media/img/sim_sasa.jpg" muted loop playsinline preload="none" aria-label="A drone flies itself through a snowy forest: its chase camera on the left, the map it builds and its planned path on the right"></video></div>
+      <figcaption>
+        <h3>A drone surveys a snowy forest by itself <span class="spd">×1.33</span></h3>
+        <p>Autonomous flight between the trunks of a simulated snowy forest: the drone picks its next goal, plans the path and builds its map as it flies. Left: a chase camera. Right: the map and the planned path. Work by <a href="https://sasakuruppuarachchi.github.io/" target="_blank" rel="noopener">Sasanka Kuruppu Arachchige ↗</a>, Tampere University.</p>
+      </figcaption>
+    </figure>
     <figure class="clip" data-yt="tello">
         <div class="frame ar-16x9"><video data-src="media/loops/sim_tello.mp4" poster="media/img/sim_tello.jpg" muted loop playsinline preload="none" aria-label="Simulated DJI Tello exploring a building by itself"></video></div>
         <figcaption>
@@ -525,11 +612,11 @@ button.copy:hover { border-color: var(--accent); }
       <h2>Contact</h2>
       <div class="copyrow"><code id="mail">vinh.van@tuni.fi</code><button class="copy" type="button" id="copy-mail">Copy address</button></div>
       <p class="foot-links"><a href="https://github.com/vinhvd749" target="_blank" rel="noopener">GitHub</a> · <a href="https://www.linkedin.com/in/vinh-d-van-b9070092" target="_blank" rel="noopener">LinkedIn</a> · <a href="media/cv/vinh_van_cv.pdf" target="_blank" rel="noopener">CV (PDF)</a></p>
-      <p class="updated">Updated 12 Oct 2026</p>
+      <p class="updated">Updated 20 Oct 2026</p>
     </div>
     <div>
       <h2>Credits</h2>
-      <p>Basemaps and building outlines: National Land Survey of Finland, CC BY 4.0. Simulation: NVIDIA Isaac Sim with the Pegasus Simulator. Varjo Teleport is a product of Varjo. Its splats come from our own captures: the same 360° video as ours, and a capture with its app on an iPhone 15 Pro.</p>
+      <p>Basemaps and building outlines: National Land Survey of Finland, CC BY 4.0. Simulation: NVIDIA Isaac Sim with the Pegasus Simulator. The snowy-forest autonomous survey is the work of <a href="https://sasakuruppuarachchi.github.io/" target="_blank" rel="noopener">Sasanka Kuruppu Arachchige</a>. Varjo Teleport is a product of Varjo. Its splats come from our own captures: the same 360° video as ours, and a capture with its app on an iPhone 15 Pro.</p>
     </div>
   </footer>
 </div>
@@ -615,6 +702,14 @@ mapRange.addEventListener("input", () => frame.style.setProperty("--map", mapRan
 [["mv-splat", ".l-splat"], ["mv-walls", ".l-walls"], ["mv-lidar", ".l-lidar"]].forEach(([id, cls]) => {
   const box = document.getElementById(id);
   box.addEventListener("change", () => { frame.querySelector(cls).hidden = !box.checked; });
+});
+
+/* Compare sliders: the range input sets the line; it also follows a drag anywhere on the image */
+document.querySelectorAll("[data-compare]").forEach(box => {
+  const r = box.querySelector("input");
+  const set = v => box.style.setProperty("--pos", v + "%");
+  r.addEventListener("input", () => set(r.value));
+  set(r.value);
 });
 
 /* Copy e-mail */
