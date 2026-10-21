@@ -99,6 +99,13 @@ p { margin: 0; }
 .hero-lead { grid-column: 1 / -1; }
 .hero-video .frame.hl-wide { aspect-ratio: 2 / 1; }
 .hero-video .frame.hl-sq { display: none; }
+/* species + ground-cover pair: one camera, splat left / labels right (2:1); stacked 1:2 on phones (the hidden cut never loads) */
+.hero-video .frame.hp-side { aspect-ratio: 2 / 1; }
+.hero-video .frame.hp-stack { display: none; aspect-ratio: 1 / 2; }
+.pair-key { list-style: none; margin: 0; padding: 0; flex-basis: 100%; display: flex; flex-wrap: wrap; gap: 0.3rem 1.1rem; font-family: var(--f-display); font-size: 0.84rem; letter-spacing: 0; color: var(--ink-2); }
+.pair-key li { display: flex; align-items: center; gap: 0.45rem; }
+.pair-key li.pk-h { font-family: var(--f-mono); font-size: 0.74rem; letter-spacing: 0.06em; text-transform: uppercase; }
+.pair-key i { width: 0.85rem; height: 0.85rem; border-radius: 2px; flex: none; box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.25); }
 /* YouTube facade: our poster + a play button; the player loads only on click */
 .yt-facade { display: block; color: inherit; }
 .yt-play { position: absolute; left: 50%; top: 50%; width: 72px; height: 50px; margin: -25px 0 0 -36px; border-radius: 12px; background: rgb(8 12 10 / 0.75); transition: background 0.15s; }
@@ -236,6 +243,8 @@ button.copy:hover { border-color: var(--accent); }
   .grid-3 { gap: 1.8rem; }
   .hero-video .frame.hl-wide { display: none; }
   .hero-video .frame.hl-sq { display: block; }
+  .hero-video .frame.hp-side { display: none; }
+  .hero-video .frame.hp-stack { display: block; }
   .bar nav { display: none; }
   .facts div { padding-right: 1rem; margin-right: 1rem; }
   .facts dd { font-size: 1.12rem; }
@@ -374,6 +383,12 @@ html { scroll-behavior: smooth; }
         <div class="frame hl-wide"><video data-src="media/loops/deadtree_wide.mp4" poster="media/img/deadtree_wide.jpg" muted loop playsinline preload="none" aria-label="Camera circling the upturned root plate of a fallen tree in the dead-tree splat"></video></div>
         <div class="frame hl-sq"><video data-src="media/loops/deadtree_sq.mp4" poster="media/img/deadtree_sq.jpg" muted loop playsinline preload="none" aria-label="Camera circling the upturned root plate of a fallen tree in the dead-tree splat"></video></div>
         <figcaption class="reel-cap"><a href="#deadtree">A fallen tree, roots and all</a><span>30 M Gaussians · 12-minute walk · 360° + action camera</span><a class="yt" target="_blank" rel="noopener" hidden>Full 2-min video on YouTube ↗</a></figcaption>
+      </figure>
+      <figure class="clip hero-video hero-lead">
+        <div class="frame hp-side"><video data-src="media/loops/species_pair_side.mp4" poster="media/img/species_pair_side.jpg" muted loop playsinline preload="none" aria-label="The same camera flying 40 m through the dead-tree splat, 3 m above the ground: the splat on the left, tree species and ground cover on the right"></video></div>
+        <div class="frame hp-stack"><video data-src="media/loops/species_pair_stack.mp4" poster="media/img/species_pair_stack.jpg" muted loop playsinline preload="none" aria-label="The same camera flying 40 m through the dead-tree splat, 3 m above the ground: the splat on top, tree species and ground cover below"></video></div>
+        <figcaption class="reel-cap"><a href="#labels">Tree species and ground cover</a><span>one camera, both sides · a 40 m flight, 3 m up · every trunk labelled, base to top</span>
+          <ul class="pair-key"><li class="pk-h">Trees</li><li><i style="background:#FF8A2A"></i>Scots pine</li><li><i style="background:#3FD38A"></i>Norway spruce</li><li><i style="background:#5FB4FF"></i>birch</li><li><i style="background:#F04DB0"></i>aspen, other broadleaf</li><li><i style="background:#F7F3E8"></i>species not named</li><li class="pk-h">Ground</li><li><i style="background:#A970FF"></i>dwarf shrubs</li><li><i style="background:#F5D547"></i>litter, bare soil</li><li><i style="background:#E0443E"></i>dead wood</li><li><i style="background:#22D3EE"></i>rock</li></ul></figcaption>
       </figure>
       <figure class="clip hero-video" data-yt="flythrough">
         <div class="frame"><video data-src="media/loops/hv22_flythrough.mp4" poster="media/img/hv22_flythrough.jpg" muted loop playsinline preload="none" aria-label="Fly-through of the hv22 forest stand splat"></video></div>
