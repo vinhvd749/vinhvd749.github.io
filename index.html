@@ -708,11 +708,12 @@ html { scroll-behavior: smooth; }
         <p>Drones that decide by themselves where to fly and where to look next.</p>
       </div>
     </div>
-    <figure class="clip">
+    <figure class="clip" data-yt="sasa">
       <div class="frame ar-sasa"><video data-src="media/loops/sim_sasa.mp4" poster="media/img/sim_sasa.jpg" muted loop playsinline preload="none" aria-label="A drone flies itself through a snowy forest: its chase camera on the left, the map it builds and its planned path on the right"></video></div>
       <figcaption>
         <h3>A drone surveys a snowy forest by itself <span class="spd">×1.33</span></h3>
-        <p>Autonomous flight between the trunks of a simulated snowy forest: the drone picks its next goal, plans the path and builds its map as it flies. Left: a chase camera. Right: the map and the planned path. Work by <a href="https://sasakuruppuarachchi.github.io/" target="_blank" rel="noopener">Sasanka Kuruppu Arachchige ↗</a>, Tampere University.</p>
+        <p>Autonomous flight between the trunks of a simulated snowy forest: the drone picks its next goal, plans the path and builds its map as it flies. Left: a chase camera. Right: the map and the planned path. The full video on YouTube is at real speed: all of this runs onboard the drone, in real time. Work by <a href="https://sasakuruppuarachchi.github.io/" target="_blank" rel="noopener">Sasanka Kuruppu Arachchige ↗</a>, Tampere University.</p>
+        <a class="yt" target="_blank" rel="noopener" hidden>Full video on YouTube, real speed ↗</a>
       </figcaption>
     </figure>
     <figure class="clip" data-yt="tello">
@@ -777,7 +778,7 @@ html { scroll-behavior: smooth; }
 /* YouTube ids for the full-length videos. Fill these in after upload; empty = the link stays hidden. */
 const YT = {
   flythrough: "", layer_trunks: "", layer_bare_earth: "", layer_ground: "", layer_lidar: "",
-  detail: "", stream_room: "", stream_hv24: "", survey: "", crash: "", tello: "", deadtree: "felw2DMTtu8"
+  detail: "", stream_room: "", stream_hv24: "", survey: "", crash: "", tello: "", deadtree: "felw2DMTtu8", sasa: "ZqG_x3XrrZ4"
 };
 
 /* Hosts where a YouTube iframe may be embedded (static hosting). Elsewhere the link opens YouTube. */
